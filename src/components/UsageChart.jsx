@@ -6,8 +6,26 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
  * Highlights leak periods in red
  */
 export default function UsageChart({ data, leakPeriods }) {
-  // Format time for display
+  // Format time for display - show minutes ago (0-30) for demo clarity
   const formatTime = (timestamp) => {
+    if (!data || data.length === 0) return '';
+    
+    // Find the data point with this timestamp
+    const dataPoint = data.find(d => d.timestamp === timestamp);
+    if (dataPoint && dataPoint.minutes_ago !== undefined) {
+      return `${dataPoint.minutes_ago} min`;
+    }
+    
+    // Fallback: calculate minutes ago from timestamp
+    // For 30-minute demo window, calculate relative to most recent data point
+    if (data.length > 0) {
+      const mostRecent = new Date(data[data.length - 1].timestamp);
+      const current = new Date(timestamp);
+      const minutesAgo = Math.round((mostRecent.getTime() - current.getTime()) / 60000);
+      return `${minutesAgo} min`;
+    }
+    
+    // Last resort: timestamp format
     const date = new Date(timestamp);
     return date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
@@ -28,6 +46,7 @@ export default function UsageChart({ data, leakPeriods }) {
               tickFormatter={formatTime}
               stroke="#6b7280"
               style={{ fontSize: '12px' }}
+              label={{ value: 'Minutes Ago', position: 'insideBottom', offset: -5, style: { fontSize: '12px' } }}
             />
             <YAxis
               label={{ value: 'Flow Rate (L/min)', angle: -90, position: 'insideLeft' }}
